@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flight Deal Tracker - Meilleurs Deals de Vols</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+        
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+        
+        .filters {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .filters select, .filters input {
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1em;
+        }
+        
+        .filters button {
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background 0.3s;
+        }
+        
+        .filters button:hover {
+            background: #5568d3;
+        }
+        
+        .deals-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+        }
+        
+        .deal-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+            position: relative;
+        }
+        
+        .deal-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 12px rgba(0,0,0,0.15);
+        }
+        
+        .deal-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: bold;
+        }
+        
+        .badge-excellent { background: #10b981; color: white; }
+        .badge-very-good { background: #3b82f6; color: white; }
+        .badge-good { background: #f59e0b; color: white; }
+        .badge-average { background: #9ca3af; color: white; }
+        
+        .destination {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #1f2937;
+        }
+        
+        .price {
+            font-size: 2em;
+            color: #667eea;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        
+        .details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+            font-size: 0.9em;
+            color: #6b7280;
+        }
+        
+        .detail-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .book-button {
+            width: 100%;
+            padding: 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .book-button:hover {
+            background: #5568d3;
+        }
+        
+        .loading {
+            text-align: center;
+            color: white;
+            font-size: 1.2em;
+            padding: 40px;
+        }
+        
+        .no-deals {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            text-align: center;
+            color: #6b7280;
+        }
+        
+        .stats {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-around;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .stat-label {
+            color: #6b7280;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>✈️ Flight Deal Tracker</h1>
+            <p>Les meilleurs deals de vols depuis Genève</p>
+        </header>
+        
+        <div class="stats" id="stats">
+            <div class="stat-item">
+                <div class="stat-value" id="totalDeals">-</div>
+                <div class="stat-label">Deals trouvés</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="avgPrice">-</div>
+                <div class="stat-label">Prix moyen</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="bestScore">-</div>
+                <div class="stat-label">Meilleur score</div>
+            </div>
+        </div>
+        
+        <div class="filters">
+            <select id="destinationFilter">
+                <option value="">Toutes les destinations</option>
+                <option value="TYO">Tokyo (TYO)</option>
+                <option value="PEK">Pékin (PEK)</option>
+                <option value="HAN">Hanoi (HAN)</option>
+                <option value="BKK">Bangkok (BKK)</option>
+                <option value="KUL">Kuala Lumpur (KUL)</option>
+                <option value="CGK">Jakarta (CGK)</option>
+            </select>
+            
+            <input type="number" id="maxPriceFilter" placeholder="Prix max (€)" min="0">
+            
+            <select id="scoreFilter">
+                <option value="0">Tous les scores</option>
+                <option value="80">Excellent (80+)</option>
+                <option value="70">Très bon (70+)</option>
+                <option value="60">Bon (60+)</option>
+            </select>
+            
+            <button onclick="loadDeals()">🔍 Filtrer</button>
+            <button onclick="triggerSearch()" style="background: #10b981;">🔄 Lancer recherche</button>
+        </div>
+        
+        <div class="deals-grid" id="dealsGrid">
+            <div class="loading">Chargement des deals...</div>
+        </div>
+    </div>
+    
+    <script>
+        // Mapping des villes
+        const cityNames = {
+            'TYO': 'Tokyo',
+            'PEK': 'Pékin',
+            'HAN': 'Hanoi',
+            'BKK': 'Bangkok',
+            'KUL': 'Kuala Lumpur',
+            'CGK': 'Jakarta'
+        };
+        
+        // Charger les stats
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/stats');
+                const stats = await response.json();
+                
+                document.getElementById('totalDeals').textContent = stats.total_flights;
+                document.getElementById('avgPrice').textContent = stats.average_price.toFixed(0) + '€';
+                document.getElementById('bestScore').textContent = stats.best_score.toFixed(0);
+            } catch (error) {
+                console.error('Erreur chargement stats:', error);
+            }
+        }
+        
+        // Charger les deals
+        async function loadDeals() {
+            const grid = document.getElementById('dealsGrid');
+            grid.innerHTML = '<div class="loading">Chargement des deals...</div>';
+            
+            // Récupérer les filtres
+            const destination = document.getElementById('destinationFilter').value;
+            const maxPrice = document.getElementById('maxPriceFilter').value;
+            const minScore = document.getElementById('scoreFilter').value;
+            
+            // Construire l'URL avec les paramètres
+            let url = '/api/deals?limit=100';
+            if (destination) url += `&destination=${destination}`;
+            if (maxPrice) url += `&max_price=${maxPrice}`;
+            if (minScore) url += `&min_score=${minScore}`;
+            
+            try {
+                const response = await fetch(url);
+                const deals = await response.json();
+                
+                if (deals.length === 0) {
+                    grid.innerHTML = '<div class="no-deals">Aucun deal trouvé avec ces filtres 😔</div>';
+                    return;
+                }
+                
+                grid.innerHTML = deals.map(deal => createDealCard(deal)).join('');
+            } catch (error) {
+                grid.innerHTML = '<div class="no-deals">Erreur lors du chargement des deals</div>';
+                console.error('Erreur:', error);
+            }
+        }
+        
+        // Créer une carte de deal
+        function createDealCard(deal) {
+            const city = cityNames[deal.arrival_airport] || deal.arrival_airport;
+            const depDate = new Date(deal.departure_date).toLocaleDateString('fr-FR');
+            const retDate = new Date(deal.return_date).toLocaleDateString('fr-FR');
+            
+            // Badge selon le score
+            let badgeClass = 'badge-average';
+            let badgeText = 'Moyen';
+            if (deal.score >= 80) {
+                badgeClass = 'badge-excellent';
+                badgeText = '🔥 Excellent';
+            } else if (deal.score >= 70) {
+                badgeClass = 'badge-very-good';
+                badgeText = '⭐ Très bon';
+            } else if (deal.score >= 60) {
+                badgeClass = 'badge-good';
+                badgeText = '👍 Bon';
+            }
+            
+            return `
+                <div class="deal-card">
+                    <div class="deal-badge ${badgeClass}">${badgeText}</div>
+                    <div class="destination">GVA → ${city}</div>
+                    <div class="price">${deal.price.toFixed(0)}€</div>
+                    <div class="details">
+                        <div class="detail-item">📅 Départ: ${depDate}</div>
+                        <div class="detail-item">🔙 Retour: ${retDate}</div>
+                        <div class="detail-item">⏱️ Durée: ${deal.total_duration_hours.toFixed(1)}h</div>
+                        <div class="detail-item">✈️ ${deal.airline || 'N/A'}</div>
+                        <div class="detail-item">🔄 ${deal.num_stops} escale(s)</div>
+                        <div class="detail-item">⭐ Score: ${deal.score.toFixed(0)}/100</div>
+                    </div>
+                    <button class="book-button" onclick="window.open('${deal.booking_link}', '_blank')">
+                        Réserver ce vol 🎫
+                    </button>
+                </div>
+            `;
+        }
+        
+        // Déclencher une recherche manuelle
+        async function triggerSearch() {
+            if (!confirm('Lancer une recherche maintenant ? Cela peut prendre quelques minutes.')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/trigger-search', { method: 'POST' });
+                const result = await response.json();
+                alert('✅ ' + result.message);
+                
+                // Recharger après 30 secondes
+                setTimeout(() => {
+                    loadDeals();
+                    loadStats();
+                }, 30000);
+            } catch (error) {
+                alert('❌ Erreur lors du lancement de la recherche');
+                console.error(error);
+            }
+        }
+        
+        // Charger au démarrage
+        loadStats();
+        loadDeals();
+        
+        // Recharger toutes les 5 minutes
+        setInterval(() => {
+            loadStats();
+            loadDeals();
+        }, 300000);
+    </script>
+</body>
+</html>

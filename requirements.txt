@@ -1,0 +1,29 @@
+# Framework Web
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+
+# Base de données
+sqlalchemy==2.0.25
+alembic==1.13.1
+psycopg2-binary==2.9.9  # Pour PostgreSQL (optionnel si vous utilisez SQLite)
+
+# Validation des données
+pydantic==2.5.3
+pydantic-settings==2.1.0
+
+# Communication HTTP
+httpx==0.26.0
+requests==2.31.0
+
+# Scheduler (tâches automatiques)
+apscheduler==3.10.4
+
+# Utilitaires
+python-dotenv==1.0.0
+python-multipart==0.0.6
+
+# Templates HTML
+jinja2==3.1.3
+
+# Logging amélioré
+loguru==0.7.2
